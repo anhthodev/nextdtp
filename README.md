@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # DTP Compare Tool
 
 Công cụ so sánh văn bản DTP nâng cao được xây dựng với Next.js, TypeScript, Tailwind CSS và shadcn/ui.
@@ -87,3 +88,6 @@ Dự án được tối ưu hóa cho Mac Mini 8GB:
 - SVG icons (nhẹ)
 
 Made with ❤️ by anhthodev 🚀
+=======
+# nextdtp
+>>>>>>> 80e3c549c7995d82c3631f401b293391ae4a2de2
