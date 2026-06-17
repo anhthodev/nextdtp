@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DTP Compare Tool
 
-## Getting Started
+Công cụ so sánh văn bản DTP nâng cao được xây dựng với Next.js, TypeScript, Tailwind CSS và shadcn/ui.
 
-First, run the development server:
+## 🌟 Tính năng
+
+- ✨ **So sánh văn bản thông minh** - Phát hiện các ký tự sai, thiếu hoặc thừa
+- 🎨 **UI đẹp và mượt mà** - Thiết kế hiện đại với Tailwind CSS
+- 🌓 **Hỗ trợ Dark Mode** - Chuyển đổi giữa chế độ sáng/tối
+- 📱 **Responsive Design** - Hoạt động tốt trên tất cả các thiết bị
+- ⚡ **Tối ưu hóa hiệu suất** - Tối ưu cho Mac Mini 8GB
+- 💾 **Lưu trữ cục bộ** - Tự động lưu dữ liệu trong localStorage
+- 🎯 **Chế độ chỉnh sửa** - Click vào ký tự để nhanh chóng điều hướng
+- 📊 **Bố cục linh hoạt** - Chuyển đổi giữa bố cục một/hai cột
+
+## 🚀 Bắt đầu
+
+### Yêu cầu
+
+- Node.js 18+ 
+- npm 9+
+
+### Cài đặt
+
+```bash
+cd dtpcompare
+npm install
+```
+
+### Chạy ứng dụng
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Mở [http://localhost:3000](http://localhost:3000) trong trình duyệt.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Cấu trúc dự án
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+dtpcompare/
+├── app/                    # Next.js App Router
+├── src/
+│   ├── components/         # React components
+│   │   └── ui/            # shadcn/ui components
+│   ├── hooks/             # Custom React hooks
+│   ├── lib/               # Utilities & helpers
+│   └── types/             # TypeScript types
+├── public/                # Static assets
+└── package.json           # Dependencies
+```
 
-## Learn More
+## 📝 Scripts
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev      # Chạy development server
+npm run build    # Build production
+npm start        # Chạy production
+npm run lint     # Kiểm tra linting
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🌐 Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Dễ dàng deploy trên Vercel:
 
-## Deploy on Vercel
+```bash
+npm install -g vercel
+vercel
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📊 Technologies
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Next.js 14** - React framework
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS** - Utility-first CSS
+- **shadcn/ui** - Beautiful UI components
+- **Lucide React** - Beautiful icons
+- **Radix UI** - Accessible primitives
+
+## 💡 Tối ưu hóa
+
+Dự án được tối ưu hóa cho Mac Mini 8GB:
+- Minimal dependencies
+- Tree-shaking
+- Code splitting tự động
+- CSS purging
+- SVG icons (nhẹ)
+
+Made with ❤️ by anhthodev 🚀
