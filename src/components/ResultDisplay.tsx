@@ -9,7 +9,12 @@ interface ResultDisplayProps {
   diffs: DiffResult[];
   isCollapsed: boolean;
   isEditMode: boolean;
-  fontFamily: string;
+  fontSize?: "small" | "medium" | "large";
+  fontFamily?: string;
+  originalFontFamily?: string;
+  originalFontWeight?: number;
+  testFontFamily?: string;
+  testFontWeight?: number;
   selectedToken: {
     panel: "original" | "checked";
     position: number;
@@ -28,11 +33,33 @@ export function ResultDisplay({
   diffs,
   isCollapsed,
   isEditMode,
+  fontSize = "medium",
   fontFamily,
+  originalFontFamily,
+  originalFontWeight,
+  testFontFamily,
+  testFontWeight,
   selectedToken,
   onCharClick,
 }: ResultDisplayProps) {
+  const resultFontSize = {
+    small: "16px",
+    medium: "18px",
+    large: "20px",
+  }[fontSize];
+
   const renderResult = (data: NormalizedData, panel: "original" | "checked") => {
+    const panelTypography =
+      panel === "original"
+        ? {
+            fontFamily: originalFontFamily ?? fontFamily,
+            fontWeight: originalFontWeight,
+          }
+        : {
+            fontFamily: testFontFamily ?? fontFamily,
+            fontWeight: testFontWeight,
+          };
+
     if (isCollapsed && panel === "original") {
       return null;
     }
@@ -60,6 +87,7 @@ export function ResultDisplay({
         selectedToken?.panel === panel &&
         selectedToken.position === position &&
         selectedToken.type === tokenType;
+      const isClickable = isEditMode && Boolean(onCharClick);
 
       return (
         <span
@@ -68,12 +96,20 @@ export function ResultDisplay({
             "transition-all duration-200",
             className,
             isSelected && "bg-yellow-300/40 text-slate-950",
-            isEditMode &&
+            isClickable &&
               "cursor-pointer hover:scale-110 hover:bg-yellow-300/40 dark:hover:bg-yellow-400/30 px-0.5 rounded"
           )}
-          onClick={() => onCharClick?.(panel, position, tokenType)}
+          onMouseDown={
+            isClickable
+              ? (event) => {
+                  event.preventDefault();
+                }
+              : undefined
+          }
+          onClick={isClickable ? () => onCharClick?.(panel, position, tokenType) : undefined}
           data-position={position}
           data-panel={panel}
+          role={isClickable ? "button" : undefined}
         >
           {char}
         </span>
@@ -102,10 +138,10 @@ export function ResultDisplay({
       return (
         <div
           className={cn(
-            "rounded-3xl p-4 text-base leading-relaxed overflow-auto whitespace-pre-wrap wrap-break-word transition-all duration-300",
+            "rounded-3xl p-4 leading-relaxed overflow-auto whitespace-pre-wrap wrap-break-word transition-all duration-300",
             "border border-slate-800 bg-slate-950/95 text-slate-100 shadow-lg shadow-slate-950/30"
           )}
-          style={{ fontFamily }}
+          style={{ ...panelTypography, fontSize: resultFontSize }}
         >
           {nodes}
         </div>
@@ -234,10 +270,10 @@ export function ResultDisplay({
     return (
       <div
         className={cn(
-          "rounded-3xl p-4 text-base leading-relaxed overflow-auto whitespace-pre-wrap wrap-break-word transition-all duration-300",
+          "rounded-3xl p-4 leading-relaxed overflow-auto whitespace-pre-wrap wrap-break-word transition-all duration-300",
           "border border-slate-800 bg-slate-950/95 text-slate-100 shadow-lg shadow-slate-950/30"
         )}
-        style={{ fontFamily }}
+        style={{ ...panelTypography, fontSize: resultFontSize }}
       >
         {nodes}
       </div>
@@ -245,7 +281,7 @@ export function ResultDisplay({
   };
 
   return (
-    <div className={cn("grid gap-6", isCollapsed ? "grid-cols-1" : "grid-cols-2", "w-full")}>
+    <div className={cn("grid gap-6 mt-4 ", isCollapsed ? "grid-cols-1" : "grid-cols-2", "w-full")}>
       {!isCollapsed && (
         <div className="flex flex-col gap-3">
           <div
@@ -268,7 +304,7 @@ export function ResultDisplay({
             "text-slate-300 dark:text-slate-400"
           )}
         >
-          <span className="text-lg">✅</span>
+          <span className="text-lg">🔎</span>
           Bản kiểm tra
         </div>
         {renderResult(testData, "checked")}

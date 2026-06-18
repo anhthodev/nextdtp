@@ -14,6 +14,7 @@ export default function Page() {
   const [result, setResult] = useState<CalcResult | null>(null);
   const [tab, setTab] = useState<"check" | "align">("check");
   const [isDark, setIsDark] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     window.setTimeout(() => {
@@ -30,14 +31,17 @@ export default function Page() {
     setValues(v);
     // run calculation on client
     try {
+      const isLineCheckMode = v.layoutMode === "line-check";
       const res = await calculateOptimalBreaks(v.text, {
-        width: v.width,
-        height: v.height,
+        layoutMode: v.layoutMode,
+        checkOnly: v.layoutMode === "line-check",
+        width: isLineCheckMode ? 600 : v.width,
+        height: isLineCheckMode ? 400 : v.height,
         fontFamily: v.fontFamily,
         fontSizePt: v.fontSizePt,
-        space: v.space,
-        targetLines: v.targetLines,
-        lineHeight: v.lineHeight,
+        space: isLineCheckMode ? 0 : v.space,
+        targetLines: isLineCheckMode ? 4 : v.targetLines,
+        lineHeight: isLineCheckMode ? 1.4 : v.lineHeight,
         preservePhrases: true,
       });
       setResult(res);
@@ -102,20 +106,27 @@ export default function Page() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-12 gap-6">
+      <div className="mx-auto max-w-7xl px-4 pt-20 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           <aside
             className={cn(
-              "col-span-12 lg:col-span-5 rounded-md border bg-white/90 shadow-sm transition-all duration-300",
+              "relative w-full overflow-hidden rounded-md border bg-white/90 shadow-sm transition-all duration-300 lg:flex-none",
+              isSidebarCollapsed ? "lg:w-14" : "lg:w-96",
               isDark ? "border-slate-800 bg-slate-950/95" : "border-slate-200 bg-white"
             )}
           >
-            <AutoLayoutForm isDark={isDark} initial={{}} onGenerateAction={handleGenerate} />
+            <AutoLayoutForm
+              isDark={isDark}
+              initial={{}}
+              collapsed={isSidebarCollapsed}
+              onToggleCollapseAction={() => setIsSidebarCollapsed((value) => !value)}
+              onGenerateAction={handleGenerate}
+            />
           </aside>
 
           <section
             className={cn(
-              "col-span-12 lg:col-span-7 rounded-md border shadow-sm transition-all duration-300",
+              "min-w-0 flex-1 rounded-md border shadow-sm transition-all duration-300",
               isDark ? "border-slate-800 bg-slate-950/95" : "border-slate-200 bg-white"
             )}
           >
@@ -161,12 +172,14 @@ export default function Page() {
               <PreviewBox
                 result={result}
                 width={values?.width ?? 600}
+                stretch={isSidebarCollapsed}
                 height={values?.height ?? 400}
                 fontFamily={values?.fontFamily ?? singleFontFamily}
                 fontSizePt={values?.fontSizePt ?? 12}
                 lineHeight={values?.lineHeight ?? 1.4}
                 align={values?.align ?? "left"}
                 isDark={isDark}
+                layoutMode={values?.layoutMode ?? "technical"}
               />
             ) : (
               <AlignInstructions result={result} boxWidth={values?.width ?? 600} isDark={isDark} />

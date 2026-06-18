@@ -18,6 +18,8 @@ export type CalcOptions = {
   targetLines: number;
   lineHeight: number;
   preservePhrases?: boolean;
+  layoutMode?: "technical" | "line-check";
+  checkOnly?: boolean;
 };
 
 export type CalcResult = {
@@ -25,6 +27,9 @@ export type CalcResult = {
   lineWidths: number[]; // px
   perLineTokens?: string[][]; // tokens composing each line
   perLineTokenWidths?: number[][]; // widths per token
+  perLineHighlightTokens?: boolean[][]; // highlight tokens split into pieces
+  perLineHighlightKinds?: Array<Array<"up" | "down" | null>>;
+  breakWarnings?: boolean[];
   perLineIndents?: number[]; // px indent for each line
   totalLines: number;
   overflow: boolean;
@@ -136,16 +141,14 @@ export async function calculateOptimalBreaks(
     targetLines,
     lineHeight,
     preservePhrases,
+    layoutMode = "technical",
+    checkOnly = false,
   } = opts;
 
   const newlineRegex = /\r\n|\r|\n/;
 
-  // Tokenize preserving Japanese words when possible.
-  // If the target line count is higher than the number of Japanese word tokens,
-  // fallback to per-character tokens so the text can still break into more lines.
-  const tokens = await tokenizeJapanese(input);
-  const normalizedNewlines = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  const charTokens = Array.from(normalizedNewlines);
+  const measure = createMeasurer(fontFamily, fontSizePt);
+
   // Merge helper: avoid lines that start with single-character particles or
   // small kana by attaching them to the previous token when possible.
   const particles = new Set([
@@ -191,18 +194,99 @@ export async function calculateOptimalBreaks(
     "ヮ",
   ]);
 
+  const isBadLineStartToken = (token: string) => {
+    const trimmed = token.trim();
+    if (!trimmed) return false;
+    if (/^[、。，．.!！？?・「『（(】〝〟「」]$/.test(trimmed)) return true;
+    if (particles.has(trimmed)) return true;
+    if (smallKana.has(trimmed)) return true;
+    return /^\p{Script=Hiragana}$/u.test(trimmed);
+  };
+
+  const isBadLineEndToken = (token: string) => {
+    const trimmed = token.trim();
+    if (!trimmed) return false;
+    return /^[（(「『〈《【［｛]$/.test(trimmed);
+  };
+
+  if (layoutMode === "line-check") {
+    const explicitLines = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+    const lines: string[] = [];
+    const lineWidths: number[] = [];
+    const perLineTokens: string[][] = [];
+    const perLineTokenWidths: number[][] = [];
+    const perLineHighlightTokens: boolean[][] = [];
+    const perLineHighlightKinds: Array<Array<"up" | "down" | null>> = [];
+
+    for (const rawLine of explicitLines) {
+      const line = rawLine;
+      const tokensInLine = await tokenizeJapanese(line);
+      const highlightKinds = tokensInLine.map(() => null as "up" | "down" | null);
+
+      const firstTokenIndex = tokensInLine.findIndex((token) => token.trim().length > 0);
+      const lastTokenIndex = (() => {
+        for (let index = tokensInLine.length - 1; index >= 0; index -= 1) {
+          if (tokensInLine[index].trim().length > 0) {
+            return index;
+          }
+        }
+
+        return -1;
+      })();
+
+      if (firstTokenIndex >= 0 && isBadLineStartToken(tokensInLine[firstTokenIndex])) {
+        highlightKinds[firstTokenIndex] = "up";
+      }
+
+      if (lastTokenIndex >= 0 && isBadLineEndToken(tokensInLine[lastTokenIndex])) {
+        highlightKinds[lastTokenIndex] = "down";
+      }
+
+      const highlightedTokens = highlightKinds.map((kind) => kind !== null);
+
+      lines.push(line);
+      lineWidths.push(measure(line));
+      perLineTokens.push(tokensInLine);
+      perLineTokenWidths.push(tokensInLine.map((token) => measure(token)));
+      perLineHighlightTokens.push(highlightedTokens);
+      perLineHighlightKinds.push(highlightKinds);
+    }
+
+    return {
+      lines,
+      lineWidths,
+      perLineTokens,
+      perLineTokenWidths,
+      perLineHighlightTokens,
+      perLineHighlightKinds,
+      perLineIndents: Array.from({ length: lines.length }, () => 0),
+      totalLines: lines.length,
+      overflow: false,
+    };
+  }
+
+  // Tokenize preserving Japanese words when possible.
+  // If the target line count is higher than the number of Japanese word tokens,
+  // fallback to per-character tokens so the text can still break into more lines.
+  const tokens = await tokenizeJapanese(input);
+  const normalizedNewlines = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const charTokens = Array.from(normalizedNewlines);
+
   // Decide active tokenization strategy.
   let activeTokens: string[] = tokens;
+  let activeHighlightTokens: boolean[] = tokens.map(() => false);
 
   if (targetLines > tokens.length) {
     if (preservePhrases === false) {
       // User prefers not to preserve phrases: fall back to characters.
       activeTokens = charTokens;
+      activeHighlightTokens = charTokens.map((token) => Boolean(token.trim()));
     } else {
       // Try to split tokens at natural punctuation boundaries first,
       // then into small chunks if still not enough pieces.
       const punctRegex = /[。．.!！？?、,，]/;
       const subTokens: string[] = [];
+      const subHighlightTokens: boolean[] = [];
 
       for (const t of tokens) {
         if (punctRegex.test(t)) {
@@ -212,22 +296,34 @@ export async function calculateOptimalBreaks(
             acc += ch;
             if (punctRegex.test(ch)) {
               subTokens.push(acc);
+              subHighlightTokens.push(false);
               acc = "";
             }
           }
-          if (acc.length > 0) subTokens.push(acc);
+          if (acc.length > 0) {
+            subTokens.push(acc);
+            subHighlightTokens.push(false);
+          }
         } else if (t.length > 6) {
           // long token: chunk into pieces of up to 4 chars
           for (let i = 0; i < t.length; i += 4) {
             subTokens.push(t.slice(i, i + 4));
+            subHighlightTokens.push(true);
           }
         } else {
           subTokens.push(t);
+          subHighlightTokens.push(false);
         }
       }
 
       // If subTokens still too few, fall back to characters
-      activeTokens = subTokens.length >= targetLines ? subTokens : charTokens;
+      if (subTokens.length >= targetLines) {
+        activeTokens = subTokens;
+        activeHighlightTokens = subHighlightTokens;
+      } else {
+        activeTokens = charTokens;
+        activeHighlightTokens = charTokens.map((token) => Boolean(token.trim()));
+      }
     }
   }
 
@@ -274,8 +370,6 @@ export async function calculateOptimalBreaks(
   if (activeTokens.length === 0) {
     return { lines: [], lineWidths: [], totalLines: 0, overflow: false };
   }
-
-  const measure = createMeasurer(fontFamily, fontSizePt);
 
   const n = activeTokens.length;
   let L = Math.max(1, Math.min(targetLines, n));
@@ -369,6 +463,7 @@ export async function calculateOptimalBreaks(
   const lineWidths: number[] = [];
   const perLineTokens: string[][] = [];
   const perLineTokenWidths: number[][] = [];
+  const perLineHighlightTokens: boolean[][] = [];
   let i = n;
   let k = L;
   while (k > 0) {
@@ -383,13 +478,16 @@ export async function calculateOptimalBreaks(
     // gather tokens and token widths for this line
     const toks: string[] = [];
     const toksW: number[] = [];
+    const toksHighlight: boolean[] = [];
     for (let t = p; t <= i - 1; t++) {
       toks.push(activeTokens[t]);
       // width of token alone
       toksW.push(spanWidth[t][t] ?? measure(activeTokens[t]));
+      toksHighlight.push(activeHighlightTokens[t] ?? false);
     }
     perLineTokens.unshift(toks);
     perLineTokenWidths.unshift(toksW);
+    perLineHighlightTokens.unshift(toksHighlight);
     i = p;
     k -= 1;
   }
@@ -434,6 +532,7 @@ export async function calculateOptimalBreaks(
     lineWidths,
     perLineTokens,
     perLineTokenWidths,
+    perLineHighlightTokens,
     perLineIndents,
     totalLines: finalLines,
     overflow,

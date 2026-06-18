@@ -6,9 +6,24 @@ import { useCompare } from "@/hooks/useCompare";
 import { useHydration } from "@/hooks/useHydration";
 import { Header } from "@/components/Header";
 import { ResultDisplay } from "@/components/ResultDisplay";
-import Fireworks from "@/components/Fireworks";
 
 const tutorialStorageKey = "dtpcompare.tutorial.completed";
+
+const vietnameseUIFontFamily =
+  'var(--font-be-vietnam-pro), "Be Vietnam Pro", "Inter", "Segoe UI", system-ui, sans-serif';
+const japaneseUIFontFamily =
+  'var(--font-noto-sans-jp), "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "YuGothic", Meiryo, system-ui, sans-serif';
+
+const japaneseScriptPattern = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
+
+function getTypographyForText(text: string) {
+  const usesJapanese = japaneseScriptPattern.test(text);
+
+  return {
+    fontFamily: usesJapanese ? japaneseUIFontFamily : vietnameseUIFontFamily,
+    fontWeight: usesJapanese ? 500 : 400,
+  };
+}
 
 const tutorialSteps = [
   {
@@ -45,8 +60,6 @@ const tutorialSteps = [
 
 export function DTPCompare() {
   const isHydrated = useHydration();
-  const japaneseUIFontFamily =
-    '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "YuGothic", Meiryo, "Noto Sans JP", sans-serif';
 
   const [sourceText, setSourceText] = useState("");
   const [targetText, setTargetText] = useState("");
@@ -68,19 +81,6 @@ export function DTPCompare() {
   const targetRef = useRef<HTMLTextAreaElement>(null);
 
   const { originalData, testData, diffs, hasError } = useCompare(sourceText, targetText);
-
-  const [showFireworks, setShowFireworks] = useState(false);
-  const prevHasError = useRef(hasError);
-
-  useEffect(() => {
-    // trigger fireworks only when state transitions from error -> no-error
-    if (prevHasError.current && !hasError) {
-      setShowFireworks(true);
-      const t = setTimeout(() => setShowFireworks(false), 3500);
-      return () => clearTimeout(t);
-    }
-    prevHasError.current = hasError;
-  }, [hasError]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -213,11 +213,14 @@ export function DTPCompare() {
     setTutorialStep((currentStep) => Math.max(currentStep - 1, 0));
   }, []);
 
-  const fontSizeVars = {
-    small: { "--font-size-base": "14px", "--font-size-result": "16px" } as React.CSSProperties,
-    medium: { "--font-size-base": "16px", "--font-size-result": "18px" } as React.CSSProperties,
-    large: { "--font-size-base": "18px", "--font-size-result": "20px" } as React.CSSProperties,
+  const fontSizeStyles = {
+    small: { fontSize: "14px" } as React.CSSProperties,
+    medium: { fontSize: "16px" } as React.CSSProperties,
+    large: { fontSize: "18px" } as React.CSSProperties,
   };
+
+  const sourceTypography = getTypographyForText(sourceText);
+  const targetTypography = getTypographyForText(targetText);
 
   const minHeight = heightCollapsed ? "100px" : "350px";
   const currentTutorial = tutorialSteps[tutorialStep];
@@ -230,7 +233,7 @@ export function DTPCompare() {
           "min-h-screen transition-colors duration-200",
           "dark bg-slate-950 text-slate-100"
         )}
-        style={fontSizeVars["medium"]}
+        style={{ ...fontSizeStyles["medium"], fontFamily: vietnameseUIFontFamily }}
       >
         <div className="max-w-7xl mx-auto px-4 py-6" suppressHydrationWarning>
           {/* Placeholder content - minimal to avoid hydration mismatch */}
@@ -246,7 +249,7 @@ export function DTPCompare() {
         "min-h-screen transition-all duration-300",
         isDark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"
       )}
-      style={fontSizeVars[fontSize]}
+      style={{ ...fontSizeStyles[fontSize], fontFamily: vietnameseUIFontFamily }}
     >
       {showTutorial && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
@@ -422,7 +425,12 @@ export function DTPCompare() {
                   ? "bg-[#0f1535] text-slate-100 border-[#27306d] placeholder-slate-500"
                   : "bg-slate-50 text-slate-900 border-slate-300 placeholder-slate-400"
               )}
-              style={{ height: minHeight, minHeight, fontFamily: japaneseUIFontFamily }}
+              style={{
+                ...sourceTypography,
+                ...fontSizeStyles[fontSize],
+                height: minHeight,
+                minHeight,
+              }}
             />
           </div>
 
@@ -454,7 +462,12 @@ export function DTPCompare() {
                   ? "bg-[#0f1535] text-slate-100 border-[#27306d] placeholder-slate-500"
                   : "bg-slate-50 text-slate-900 border-slate-300 placeholder-slate-400"
               )}
-              style={{ height: minHeight, minHeight, fontFamily: japaneseUIFontFamily }}
+              style={{
+                ...targetTypography,
+                ...fontSizeStyles[fontSize],
+                height: minHeight,
+                minHeight,
+              }}
             />
           </div>
         </div>
@@ -493,7 +506,6 @@ export function DTPCompare() {
                 : "ring-2 ring-sky-400/70 ring-offset-2 ring-offset-slate-50")
           )}
         >
-          <Fireworks active={showFireworks} duration={1400} />
           <div
             className={cn(
               "relative overflow-hidden p-6 rounded-2xl backdrop-blur-sm transition-all duration-300",
@@ -502,15 +514,15 @@ export function DTPCompare() {
                 : "bg-white/80 border border-slate-200 shadow-smooth"
             )}
           >
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold">📌 Kết Quả</h2>
+                <h2 className="text-xl font-bold mr-2">📌 Kết Quả</h2>
                 <div
                   className={cn(
-                    "w-3 h-3 rounded-full animate-pulse-soft",
+                    "w-5 h-5 shrink-0 rounded-full animate-pulse-soft ring-2 ring-white/20",
                     hasError
-                      ? "bg-linear-to-r from-red-500 to-red-600 shadow-glow-blue"
-                      : "bg-linear-to-r from-green-500 to-emerald-600"
+                      ? "bg-linear-to-br from-rose-300 via-red-400 to-fuchsia-500 shadow-[0_0_28px_rgba(251,113,133,0.95)]"
+                      : "bg-linear-to-br from-lime-300 via-emerald-400 to-cyan-400 shadow-[0_0_28px_rgba(74,222,128,0.95)]"
                   )}
                 />
                 <span className="text-sm font-medium">
@@ -560,7 +572,11 @@ export function DTPCompare() {
             isEditMode={isEditMode}
             selectedToken={selectedToken}
             onCharClick={handleCharClick}
-            fontFamily={japaneseUIFontFamily}
+            originalFontFamily={sourceTypography.fontFamily}
+            originalFontWeight={sourceTypography.fontWeight}
+            testFontFamily={targetTypography.fontFamily}
+            testFontWeight={targetTypography.fontWeight}
+            fontSize={fontSize}
           />
         </div>
 
@@ -571,11 +587,19 @@ export function DTPCompare() {
             isDark ? "text-slate-400 hover:text-slate-300" : "text-slate-500 hover:text-slate-600"
           )}
         >
-          Made by{" "}
-          <span className="font-semibold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            anhthodev
-          </span>{" "}
-          🚀
+          <p>
+            Made by{" "}
+            <span className="font-semibold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              anhthodev
+            </span>{" "}
+            🚀
+          </p>
+
+          <div className="mt-2 space-y-1">
+            <p>📞 Zalo: 0703162730</p>
+            <p>💼 Nhận thiết kế website, web app và công cụ tự động hóa</p>
+            <p>📩 Liên hệ để trao đổi yêu cầu và báo giá</p>
+          </div>
         </footer>
       </div>
     </div>
