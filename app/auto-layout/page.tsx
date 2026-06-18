@@ -188,18 +188,26 @@ export default function Page() {
         </div>
       </div>
 
-      <footer
-        className={cn(
-          "mt-12 text-center text-sm pb-6 transition-colors duration-300",
-          isDark ? "text-slate-400 hover:text-slate-300" : "text-slate-500 hover:text-slate-600"
-        )}
-      >
-        Made by{" "}
-        <span className="font-semibold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          anhthodev
-        </span>{" "}
-        🚀
-      </footer>
+       <footer
+                className={cn(
+                  "mt-12 text-center text-sm pb-6 transition-colors duration-300",
+                  isDark ? "text-slate-400 hover:text-slate-300" : "text-slate-500 hover:text-slate-600"
+                )}
+              >
+                <p>
+                  Made by{" "}
+                  <span className="font-semibold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    anhthodev
+                  </span>{" "}
+                  🚀
+                </p>
+      
+                <div className="mt-2 space-y-1">
+                  <p>📞 Zalo: 0703162730</p>
+                  <p>💼 Nhận thiết kế website, web app và công cụ tự động hóa</p>
+                  <p>📩 Liên hệ để trao đổi yêu cầu và báo giá</p>
+                </div>
+              </footer>
     </main>
   );
 }

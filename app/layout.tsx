@@ -11,7 +11,6 @@ const beVietnamPro = Be_Vietnam_Pro({
 
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
-  subsets: ["japanese"],
   weight: ["400", "500", "700"],
   display: "swap",
 });
