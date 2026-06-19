@@ -6,8 +6,7 @@ export function normalizeForCompare(text: string): NormalizedData {
 
   const normalizedChars: string[] = [];
   const indexMap: number[] = [];
-  const whitespaceRegex =
-    /[\s\u00A0\u1680\u180E\u2000-\u200A\u202F\u205F\u3000]/;
+  const whitespaceRegex = /[\s\u00A0\u1680\u180E\u2000-\u200A\u202F\u205F\u3000]/;
   const invisibleRegex =
     /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u00AD\u200B\u200C\u200D\u2060\u2061\u2062\u2063\u206A-\u206F\uFEFF\uFFF9-\uFFFB]/g;
   const urlRegex = /https?:\/\/[^\s<>\)\(\[\]]+/gi;
@@ -27,13 +26,7 @@ export function normalizeForCompare(text: string): NormalizedData {
       return [" "];
     }
 
-    if (
-      char === "…" ||
-      char === "‥" ||
-      char === "。" ||
-      char === "｡" ||
-      char === "．"
-    ) {
+    if (char === "…" || char === "‥" || char === "。" || char === "｡" || char === "．") {
       return [char];
     }
 
@@ -162,24 +155,22 @@ export function normalizeForCompare(text: string): NormalizedData {
     "！",
   ]);
 
-  let bracketCleaned = cleaned;
+  const bracketCleaned = cleaned;
 
   const urlRanges: Array<{ start: number; end: number; text: string }> = [];
-  for (const m of bracketCleaned.matchAll(urlRegex)) {
+  let match: RegExpExecArray | null;
+  while ((match = urlRegex.exec(bracketCleaned)) !== null) {
     urlRanges.push({
-      start: m.index!,
-      end: m.index! + m[0].length,
-      text: m[0],
+      start: match.index,
+      end: match.index + match[0].length,
+      text: match[0],
     });
   }
 
   let urlPtr = 0;
 
   for (let i = 0; i < bracketCleaned.length; i++) {
-    if (
-      urlPtr < urlRanges.length &&
-      i === urlRanges[urlPtr].start
-    ) {
+    if (urlPtr < urlRanges.length && i === urlRanges[urlPtr].start) {
       const txt = urlRanges[urlPtr].text;
       for (let k = 0; k < txt.length; k++) {
         normalizedChars.push(txt[k]);
@@ -297,14 +288,9 @@ export function diff(a: string, b: string): DiffResult[] {
     const next = result[k + 1];
 
     const isBracket =
-      bracketChars.has(op.char || "") ||
-      (next && bracketChars.has(next.char || ""));
+      bracketChars.has(op.char || "") || (next && bracketChars.has(next.char || ""));
 
-    if (
-      !isBracket &&
-      op.type === "missing" &&
-      next?.type === "extra"
-    ) {
+    if (!isBracket && op.type === "missing" && next?.type === "extra") {
       merged.push({
         type: "replace",
         from: op.char,

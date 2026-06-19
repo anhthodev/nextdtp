@@ -26,6 +26,7 @@ interface HeaderProps {
   fontSize: "small" | "medium" | "large";
   onFontSizeChange: (size: "small" | "medium" | "large") => void;
   onLayoutToggle: () => void;
+  isLiteMode?: boolean;
 }
 
 export function Header({
@@ -34,6 +35,7 @@ export function Header({
   fontSize,
   onFontSizeChange,
   onLayoutToggle,
+  isLiteMode = false,
 }: HeaderProps) {
   const [showHelp, setShowHelp] = useState(false);
 
@@ -41,7 +43,7 @@ export function Header({
     <>
       <header
         className={cn(
-          "mb-8 flex items-center justify-between border-b px-2 pb-6 transition-all duration-300 backdrop-blur-xl",
+          "mb-8 flex items-center justify-between border-b px-2 pb-6 transition-colors duration-200",
           isDark
             ? "border-slate-800 bg-slate-950/95 text-slate-100"
             : "border-slate-200 bg-white/95 text-slate-900"
@@ -72,7 +74,7 @@ export function Header({
           >
             <SelectTrigger
               className={cn(
-                "w-auto rounded-lg transition-all duration-300",
+                "w-auto rounded-lg transition-colors duration-200",
                 isDark
                   ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:border-slate-600"
                   : "bg-white border-slate-300 text-slate-900 hover:bg-slate-50 hover:border-slate-400"
@@ -90,7 +92,7 @@ export function Header({
           <button
             onClick={() => setShowHelp(true)}
             className={cn(
-              "p-2.5 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95",
+              "p-2.5 rounded-lg transition-colors duration-200 hover:scale-[1.02] active:scale-95",
               isDark
                 ? "bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-slate-100"
                 : "bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 hover:text-slate-900"
@@ -103,7 +105,7 @@ export function Header({
           <Link
             href="/auto-layout"
             className={cn(
-              "p-2.5 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95",
+              "p-2.5 rounded-lg transition-colors duration-200 hover:scale-[1.02] active:scale-95",
               isDark
                 ? "bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-slate-100"
                 : "bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 hover:text-slate-900"
@@ -116,7 +118,7 @@ export function Header({
           <button
             onClick={onLayoutToggle}
             className={cn(
-              "p-2.5 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95",
+              "p-2.5 rounded-lg transition-colors duration-200 hover:scale-[1.02] active:scale-95",
               isDark
                 ? "bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-slate-100"
                 : "bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 hover:text-slate-900"
@@ -129,7 +131,7 @@ export function Header({
           <button
             onClick={onThemeToggle}
             className={cn(
-              "p-2.5 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95",
+              "p-2.5 rounded-lg transition-colors duration-200 hover:scale-[1.02] active:scale-95",
               isDark
                 ? "bg-linear-to-r from-[#3b82f6]/20 to-[#8b5cf6]/20 border border-[#3b82f6]/50 text-yellow-300 hover:text-yellow-200"
                 : "bg-linear-to-r from-blue-100 to-sky-100 border border-slate-300 text-slate-700 hover:text-slate-900"
@@ -144,10 +146,14 @@ export function Header({
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
         <DialogContent
           className={cn(
-            "max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl shadow-2xl",
+            "max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl",
             isDark
-              ? "border border-[#27306d] bg-[#1a1f3a]"
-              : "border border-slate-200 bg-slate-50 text-slate-900 shadow-slate-300/40"
+              ? isLiteMode
+                ? "border border-[#27306d] bg-[#1a1f3a]"
+                : "border border-[#27306d] bg-[#1a1f3a] shadow-xl"
+              : isLiteMode
+                ? "border border-slate-200 bg-slate-50 text-slate-900"
+                : "border border-slate-200 bg-slate-50 text-slate-900 shadow-slate-300/30"
           )}
         >
           <DialogHeader>
@@ -184,8 +190,12 @@ export function Header({
               className={cn(
                 "p-4 rounded-xl",
                 isDark
-                  ? "bg-[#0f1535] border border-[#27306d]"
-                  : "bg-white border border-slate-200 shadow-sm"
+                  ? isLiteMode
+                    ? "bg-[#0f1535] border border-[#27306d]"
+                    : "bg-[#0f1535] border border-[#27306d]"
+                  : isLiteMode
+                    ? "bg-white border border-slate-200"
+                    : "bg-white border border-slate-200 shadow-sm"
               )}
             >
               <h3 className="font-semibold mb-2 flex items-center gap-2">
