@@ -93,7 +93,7 @@ function ResultPanel({
 
   const panelClassName =
     panel === "checked"
-      ? "rounded-3xl p-4 leading-relaxed overflow-auto whitespace-pre-wrap wrap-break-word transition-all duration-300 bg-slate-950/95 text-slate-100 shadow-lg shadow-slate-950/30"
+      ? "rounded-3xl p-4 leading-relaxed overflow-auto whitespace-pre-wrap wrap-break-word transition-all duration-300 border border-slate-700/60 bg-slate-950/95 text-slate-100 shadow-lg shadow-slate-950/30"
       : "rounded-3xl p-4 leading-relaxed overflow-auto whitespace-pre-wrap wrap-break-word transition-all duration-300 border border-slate-800 bg-slate-950/95 text-slate-100 shadow-lg shadow-slate-950/30";
 
   const nodes: React.ReactNode[] = [];
